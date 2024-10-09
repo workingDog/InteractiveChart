@@ -21,6 +21,11 @@
 			path = InteractiveChart;
 			sourceTree = "<group>";
 		};
+		C7988DF52CB6545C0067BD88 /* Images */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Images;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -38,6 +43,7 @@
 			isa = PBXGroup;
 			children = (
 				C7627E622CA8D4B7001B184D /* readme.md */,
+				C7988DF52CB6545C0067BD88 /* Images */,
 				C70C5A542CA8C69800C82248 /* InteractiveChart */,
 				C70C5A532CA8C69800C82248 /* Products */,
 			);
@@ -68,6 +74,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				C70C5A542CA8C69800C82248 /* InteractiveChart */,
+				C7988DF52CB6545C0067BD88 /* Images */,
 			);
 			name = InteractiveChart;
 			packageProductDependencies = (
