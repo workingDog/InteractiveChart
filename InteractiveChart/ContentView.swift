@@ -11,9 +11,11 @@ import Charts
 
 
 struct ContentView: View {
-    let stepSize = 100.0
-    let dx = 40.0    // delta temp
-    let dy = 1000.0  // delta time
+    let stepSize = 100.0  // yaxis steps
+    
+    // todo calculate these
+    let dy = 15.0    // delta temp
+    let dx = 1000.0  // delta time
     
     @State private var chartData: [ChartData] = []
     @State private var yCount = 10
@@ -39,7 +41,7 @@ struct ContentView: View {
             .padding(15)
 
             .chartGesture { proxy in
-                DragGesture(minimumDistance: 1)
+                DragGesture(minimumDistance: 0)
                     .onChanged {
                         if let (date, temp) = proxy.value(at: $0.location, as: (Date, Double).self) {
                             if dragData == nil, let chartData = closestChartData(to: date, targetTemp: temp) {
@@ -118,7 +120,7 @@ struct ContentView: View {
         for datum in chartData {
             let timeInterval = abs(datum.date.timeIntervalSince(targetDate))
             let tempDifference = abs(datum.temp - targetTemp)
-            if tempDifference < dx && timeInterval < dy {
+            if tempDifference < dy && timeInterval < dx {
                 closestChartData = datum
             }
         }
@@ -155,7 +157,7 @@ struct ContentView: View {
  
  struct ContentView: View {
      let stepSize: Double = 100.0
-     let dx = 40.0    // delta temp
+     let dx = 15.0    // delta temp
      let dy = 1000.0  // delta time
      
      @State private var chartData: [ChartData] = []
