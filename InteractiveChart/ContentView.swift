@@ -11,7 +11,9 @@ import Charts
 
 
 struct ContentView: View {
-    let stepSize: Double = 100.0
+    let stepSize = 100.0
+    let dx = 40.0    // delta temp
+    let dy = 1000.0  // delta time
     
     @State private var chartData: [ChartData] = []
     @State private var yCount = 10
@@ -31,6 +33,7 @@ struct ContentView: View {
                             .fill(dragData?.id == item.id ? .red : .blue.opacity(0.5))
                             .frame(width: 30)
                     }
+                    .interpolationMethod(.catmullRom)
                 }
             }
             .padding(15)
@@ -111,19 +114,11 @@ struct ContentView: View {
     
     func closestChartData(to targetDate: Date, targetTemp: Double) -> ChartData? {
         guard !chartData.isEmpty else { return nil }
-        
         var closestChartData: ChartData?
-        var minDistance: Double = .infinity
-        
         for datum in chartData {
             let timeInterval = abs(datum.date.timeIntervalSince(targetDate))
             let tempDifference = abs(datum.temp - targetTemp)
-            
-            // weighted (0.5 and 0.5) distance
-            let distance = 0.5 * timeInterval + 0.5 * tempDifference
-            
-            if distance < minDistance {
-                minDistance = distance
+            if tempDifference < dx && timeInterval < dy {
                 closestChartData = datum
             }
         }
@@ -155,16 +150,13 @@ struct ContentView: View {
     ContentView()
 }
 
-
- 
-
-
- 
 /*
  // Using simple `struct ChartData`
  
  struct ContentView: View {
      let stepSize: Double = 100.0
+     let dx = 40.0    // delta temp
+     let dy = 1000.0  // delta time
      
      @State private var chartData: [ChartData] = []
      @State private var yCount = 10
@@ -263,28 +255,17 @@ struct ContentView: View {
          ]
      }
      
-     func closestChartData(to targetDate: Date, targetTemp: Double) -> Int? {
+     func closestChartData(to targetDate: Date, targetTemp: Double) -> ChartData? {
          guard !chartData.isEmpty else { return nil }
-         
          var closestChartData: ChartData?
-         var minDistance: Double = .infinity
-         
          for datum in chartData {
              let timeInterval = abs(datum.date.timeIntervalSince(targetDate))
              let tempDifference = abs(datum.temp - targetTemp)
-             
-             // weighted (0.5 and 0.5) distance
-             let distance = 0.5 * timeInterval + 0.5 * tempDifference
-             
-             if distance < minDistance {
-                 minDistance = distance
+             if tempDifference < dx && timeInterval < dy {
                  closestChartData = datum
              }
          }
-         if let closest = closestChartData {
-             return chartData.firstIndex(where: {closest.id == $0.id})
-         }
-         return nil
+         return closestChartData
      }
      
      func timeStringOf(_ date: Date) -> String {
