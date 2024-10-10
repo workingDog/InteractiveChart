@@ -44,7 +44,7 @@ struct ContentView: View {
                 DragGesture(minimumDistance: 0)
                     .onChanged {
                         if let (date, temp) = proxy.value(at: $0.location, as: (Date, Double).self) {
-                            if dragData == nil, let chartData = closestChartData(to: date, targetTemp: temp) {
+                            if dragData == nil, let chartData = closestChartData(to: date, andAlso: temp) {
                                 dragData = chartData
                             } else {
                                 dragData?.date = date
@@ -114,7 +114,7 @@ struct ContentView: View {
         ]
     }
     
-    func closestChartData(to targetDate: Date, targetTemp: Double) -> ChartData? {
+    func closestChartData(to targetDate: Date, andAlso targetTemp: Double) -> ChartData? {
         guard !chartData.isEmpty else { return nil }
         var closestChartData: ChartData?
         for datum in chartData {
@@ -147,12 +147,12 @@ struct ContentView: View {
     }
 }
 
-
 #Preview {
     ContentView()
 }
 
-/*
+
+ /*
  // Using simple `struct ChartData`
  
  struct ContentView: View {
@@ -189,8 +189,10 @@ struct ContentView: View {
                              if dragIndex == nil, let index = closestChartData(to: date, targetTemp: temp) {
                                  dragIndex = index
                              } else {
-                                 chartData[dragIndex!].date = date
-                                 chartData[dragIndex!].temp = temp
+                                 if dragIndex != nil {
+                                     chartData[dragIndex!].date = date
+                                     chartData[dragIndex!].temp = temp
+                                 }
                              }
                          }
                      }
@@ -257,7 +259,7 @@ struct ContentView: View {
          ]
      }
      
-     func closestChartData(to targetDate: Date, targetTemp: Double) -> ChartData? {
+     func closestChartData(to targetDate: Date, targetTemp: Double) -> Int? {
          guard !chartData.isEmpty else { return nil }
          var closestChartData: ChartData?
          for datum in chartData {
@@ -267,7 +269,14 @@ struct ContentView: View {
                  closestChartData = datum
              }
          }
-         return closestChartData
+         if let closest = closestChartData {
+             return chartData.firstIndex(where: {closest.id == $0.id})
+         }
+         return nil
+     }
+     
+     func indexOf(_ datum: ChartData) -> Int? {
+         chartData.firstIndex(where: {datum.id == $0.id})
      }
      
      func timeStringOf(_ date: Date) -> String {
@@ -275,11 +284,7 @@ struct ContentView: View {
          formatter.dateFormat = "HH:mm"
          return formatter.string(from: date)
      }
-     
-     func indexOf(_ datum: ChartData) -> Int? {
-         chartData.firstIndex(where: {datum.id == $0.id})
-     }
-     
+  
  }
 
  struct ChartData: Identifiable {
@@ -293,5 +298,5 @@ struct ContentView: View {
  #Preview {
      ContentView()
  }
-
- */
+*/
+ 
