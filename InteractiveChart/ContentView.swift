@@ -43,12 +43,12 @@ struct ContentView: View {
             .chartGesture { proxy in
                 DragGesture(minimumDistance: 0)
                     .onChanged {
-                        if let (date, temp) = proxy.value(at: $0.location, as: (Date, Double).self) {
-                            if dragData == nil, let chartData = closestChartData(to: date, andAlso: temp) {
+                        if let target: (date: Date, temp: Double) = proxy.value(at: $0.location, as: (Date, Double).self) {
+                            if dragData == nil, let chartData = closestChartData(to: target) {
                                 dragData = chartData
                             } else {
-                                dragData?.date = date
-                                dragData?.temp = temp
+                                dragData?.date = target.date
+                                dragData?.temp = target.temp
                             }
                         }
                     }
@@ -114,12 +114,12 @@ struct ContentView: View {
         ]
     }
     
-    func closestChartData(to targetDate: Date, andAlso targetTemp: Double) -> ChartData? {
+    func closestChartData(to target: (date: Date, temp: Double)) -> ChartData? {
         guard !chartData.isEmpty else { return nil }
         var closestChartData: ChartData?
         for datum in chartData {
-            let timeInterval = abs(datum.date.timeIntervalSince(targetDate))
-            let tempDifference = abs(datum.temp - targetTemp)
+            let timeInterval = abs(datum.date.timeIntervalSince(target.date))
+            let tempDifference = abs(datum.temp - target.temp)
             if tempDifference < dy && timeInterval < dx {
                 closestChartData = datum
             }
