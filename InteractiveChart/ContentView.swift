@@ -11,44 +11,38 @@ import Charts
 
 
 struct ContentView: View {
-    let stepSize = 100.0  // yaxis steps
-    
-    // todo calculate these
-    let dy = 15.0    // delta temp
-    let dx = 1000.0  // delta time
+    let dy = 15.0
+    let dx = 15.0
     
     @State private var chartData: [ChartData] = []
-    @State private var yCount = 10
     @State private var dragData: ChartData?
-
+    
     
     var body: some View {
         VStack {
             Chart {
-                ForEach(chartData) { item in
-                    LineMark(
-                        x: .value("Time", item.date),
-                        y: .value("Temp", item.temp)
-                    )
-                    .symbol {
-                        Circle()
-                            .fill(dragData?.id == item.id ? .red : .blue.opacity(0.5))
-                            .frame(width: 30)
-                    }
-                    .interpolationMethod(.catmullRom)
+                ForEach(chartData) { point in
+                    LineMark(x: .value("X", point.x), y: .value("Y", point.y))
+                    // PointMark(x: .value("X", point.x), y: .value("Y", point.y))
+                        .symbol {
+                            Circle()
+                                .fill(dragData?.id == point.id ? .red : .blue.opacity(0.5))
+                                .frame(width: dx+dy)
+                        }
+                        .interpolationMethod(.catmullRom)
                 }
             }
             .padding(15)
-
+            
             .chartGesture { proxy in
                 DragGesture(minimumDistance: 0)
                     .onChanged {
-                        if let target: (date: Date, temp: Double) = proxy.value(at: $0.location, as: (Date, Double).self) {
+                        if let target: (x: Double, y: Double) = proxy.value(at: $0.location, as: (Double, Double).self) {
                             if dragData == nil, let chartData = closestChartData(to: target) {
                                 dragData = chartData
                             } else {
-                                dragData?.date = target.date
-                                dragData?.temp = target.temp
+                                dragData?.x = target.x
+                                dragData?.y = target.y
                             }
                         }
                     }
@@ -61,242 +55,43 @@ struct ContentView: View {
                 $0.background(.pink.opacity(0.06))
                     .border(.blue, width: 2)
             }
-            
-            .chartXAxis {
-                AxisMarks(values: chartData.map { $0.date }) { value in
-                    AxisGridLine()
-                    AxisTick()
-                    AxisValueLabel() {
-                        if let date = value.as(Date.self) {
-                            Text(timeStringOf(date))
-                        }
-                    }
-                }
-            }
-            
-            .chartYAxis {
-                AxisMarks(position: .leading,
-                          values: .automatic(desiredCount: yCount)) { value in
-                    AxisGridLine()
-                    AxisTick()
-                    AxisValueLabel() {
-                        if let val = value.as(Int.self) {
-                            Text("\(val) \u{00B0}")
-                                .font(.system(size: 18))
-                                .bold()
-                        }
-                    }
-                }
-            }
         }
-        .background(Color.purple.opacity(0.1).ignoresSafeArea())
         .onAppear {
-            chartData = getData()
-            // adjust the number of Y axis labels from the data
-            if let min = chartData.min(by: { $0.temp < $1.temp }),
-               let max = chartData.max(by: { $0.temp < $1.temp }) {
-                yCount = Int((max.temp - min.temp) / stepSize) + 1
-            }
+            chartData = [
+                ChartData(x: 0.0, y: 0.0),
+                ChartData(x: 100.0, y: 100.0),
+                ChartData(x: 200.0, y: 200.0),
+                ChartData(x: 300.0, y: 300.0),
+                ChartData(x: 400.0, y: 400.0),
+                ChartData(x: 500.0, y: 500.0),
+                ChartData(x: 600.0, y: 600.0),
+                ChartData(x: 700.0, y: 700.0),
+                ChartData(x: 800.0, y: 800.0)
+            ]
         }
     }
     
-    func getData() -> [ChartData] {
-        [
-            ChartData(temp: 0.0, date: Date()),
-            ChartData(temp: 100.0, date: Date().addingTimeInterval(3600)),
-            ChartData(temp: 200.0, date: Date().addingTimeInterval(3600 * 2)),
-            ChartData(temp: 300.0, date: Date().addingTimeInterval(3600 * 3)),
-            ChartData(temp: 400.0, date: Date().addingTimeInterval(3600 * 4)),
-            ChartData(temp: 500.0, date: Date().addingTimeInterval(3600 * 5)),
-            ChartData(temp: 600.0, date: Date().addingTimeInterval(3600 * 6)),
-            ChartData(temp: 700.0, date: Date().addingTimeInterval(3600 * 7)),
-            ChartData(temp: 800.0, date: Date().addingTimeInterval(3600 * 8))
-        ]
-    }
-    
-    func closestChartData(to target: (date: Date, temp: Double)) -> ChartData? {
-        guard !chartData.isEmpty else { return nil }
+    func closestChartData(to target: (x: Double, y: Double)) -> ChartData? {
         var closestChartData: ChartData?
         for datum in chartData {
-            let timeInterval = abs(datum.date.timeIntervalSince(target.date))
-            let tempDifference = abs(datum.temp - target.temp)
-            if tempDifference < dy && timeInterval < dx {
+            let xdiff = abs(datum.x - target.x)
+            let ydiff = abs(datum.y - target.y)
+            if xdiff < dx && ydiff < dy {
                 closestChartData = datum
             }
         }
         return closestChartData
     }
-    
-    func timeStringOf(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        return formatter.string(from: date)
-    }
-
 }
 
 @Observable class ChartData: Identifiable {
     let id = UUID()
     
-    var temp: Double
-    var date: Date
+    var x: Double
+    var y: Double
     
-    init(temp: Double, date: Date) {
-        self.temp = temp
-        self.date = date
+    init(x: Double, y: Double) {
+        self.x = x
+        self.y = y
     }
 }
-
-#Preview {
-    ContentView()
-}
-
-
- /*
- // Using simple `struct ChartData`
- 
- struct ContentView: View {
-     let stepSize: Double = 100.0
-     let dx = 15.0    // delta temp
-     let dy = 1000.0  // delta time
-     
-     @State private var chartData: [ChartData] = []
-     @State private var yCount = 10
-     @State private var dragIndex: Int?
-
-     
-     var body: some View {
-         VStack {
-             Chart {
-                 ForEach(chartData) { item in
-                     LineMark(
-                         x: .value("Time", item.date),
-                         y: .value("Temp", item.temp)
-                     )
-                     .symbol {
-                         Circle()
-                             .fill(dragIndex == indexOf(item) ? .red : .blue.opacity(0.5))
-                             .frame(width: 30)
-                     }
-                 }
-             }
-             .padding(15)
-
-             .chartGesture { proxy in
-                 DragGesture(minimumDistance: 1)
-                     .onChanged {
-                         if let (date, temp) = proxy.value(at: $0.location, as: (Date, Double).self) {
-                             if dragIndex == nil, let index = closestChartData(to: date, targetTemp: temp) {
-                                 dragIndex = index
-                             } else {
-                                 if dragIndex != nil {
-                                     chartData[dragIndex!].date = date
-                                     chartData[dragIndex!].temp = temp
-                                 }
-                             }
-                         }
-                     }
-                     .onEnded { _ in
-                         dragIndex = nil
-                     }
-             }
-             
-             .chartPlotStyle {
-                 $0.background(.pink.opacity(0.06))
-                     .border(.blue, width: 2)
-             }
-             
-             .chartXAxis {
-                 AxisMarks(values: chartData.map { $0.date }) { value in
-                     AxisGridLine()
-                     AxisTick()
-                     // AxisValueLabel(format: .dateTime.hour())
-                     AxisValueLabel() {
-                         if let date = value.as(Date.self) {
-                             Text(timeStringOf(date))
-                         }
-                     }
-                 }
-             }
-             
-             .chartYAxis {
-                 AxisMarks(position: .leading,
-                           values: .automatic(desiredCount: yCount)) { value in
-                     AxisGridLine()
-                     AxisTick()
-                     AxisValueLabel() {
-                         if let val = value.as(Int.self) {
-                             Text("\(val) \u{00B0}")
-                                 .font(.system(size: 18))
-                                 .bold()
-                         }
-                     }
-                 }
-             }
-         }
-         .background(Color.purple.opacity(0.1).ignoresSafeArea())
-         .onAppear {
-             chartData = getData()
-             // adjust the number of Y axis labels from the data
-             if let min = chartData.min(by: { $0.temp < $1.temp }),
-                let max = chartData.max(by: { $0.temp < $1.temp }) {
-                 yCount = Int((max.temp - min.temp) / stepSize) + 1
-             }
-         }
-     }
-     
-     func getData() -> [ChartData] {
-         [
-             ChartData(temp: 0.0, date: Date()),
-             ChartData(temp: 100.0, date: Date().addingTimeInterval(3600)),
-             ChartData(temp: 200.0, date: Date().addingTimeInterval(3600 * 2)),
-             ChartData(temp: 300.0, date: Date().addingTimeInterval(3600 * 3)),
-             ChartData(temp: 400.0, date: Date().addingTimeInterval(3600 * 4)),
-             ChartData(temp: 500.0, date: Date().addingTimeInterval(3600 * 5)),
-             ChartData(temp: 600.0, date: Date().addingTimeInterval(3600 * 6)),
-             ChartData(temp: 700.0, date: Date().addingTimeInterval(3600 * 7)),
-             ChartData(temp: 800.0, date: Date().addingTimeInterval(3600 * 8))
-         ]
-     }
-     
-     func closestChartData(to targetDate: Date, targetTemp: Double) -> Int? {
-         guard !chartData.isEmpty else { return nil }
-         var closestChartData: ChartData?
-         for datum in chartData {
-             let timeInterval = abs(datum.date.timeIntervalSince(targetDate))
-             let tempDifference = abs(datum.temp - targetTemp)
-             if tempDifference < dx && timeInterval < dy {
-                 closestChartData = datum
-             }
-         }
-         if let closest = closestChartData {
-             return chartData.firstIndex(where: {closest.id == $0.id})
-         }
-         return nil
-     }
-     
-     func indexOf(_ datum: ChartData) -> Int? {
-         chartData.firstIndex(where: {datum.id == $0.id})
-     }
-     
-     func timeStringOf(_ date: Date) -> String {
-         let formatter = DateFormatter()
-         formatter.dateFormat = "HH:mm"
-         return formatter.string(from: date)
-     }
-  
- }
-
- struct ChartData: Identifiable {
-     let id = UUID()
-     
-     var temp: Double
-     var date: Date
- }
-
-
- #Preview {
-     ContentView()
- }
-*/
- 

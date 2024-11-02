@@ -5,5 +5,5 @@ Drag the data points displayed on the Chart to change the data value.
 
 
 <p float="left">
-  <img src="Images/img1.png" width="444"  height="555" />
+  <img src="Images/img2.png" width="444"  height="555" />
 </p>
